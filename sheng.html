@@ -1,0 +1,834 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lumina - 質感生活選品店</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome 圖示庫 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#f8fafc',
+                            100: '#f1f5f9',
+                            500: '#3b82f6',
+                            600: '#2563eb',
+                            900: '#0f172a',
+                            accent: '#6366f1'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* 自訂平滑滾動與捲軸樣式 */
+        html {
+            scroll-behavior: smooth;
+        }
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+        .hero-slide {
+            transition: opacity 0.7s ease-in-out;
+        }
+        .toast-enter {
+            transform: translateY(100%);
+            opacity: 0;
+        }
+        .toast-enter-active {
+            transform: translateY(0);
+            opacity: 1;
+            transition: all 0.3s ease-out;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans min-h-screen flex flex-col justify-between antialiased">
+
+    <!-- 1. 頂部導覽列 (Header & Navbar) -->
+    <header class="sticky top-0 z-40 bg-white/90 backdrop-blur-md border-b border-slate-100 shadow-sm transition-all duration-200">
+        <!-- 頂部跑馬燈提示 -->
+        <div class="bg-slate-900 text-white text-xs py-2 px-4 text-center font-medium tracking-wide">
+            ✨ 全館滿 $1,500 即享超商免運 | 新會員首購享 9 折優惠碼：<span class="text-amber-300 font-bold">LUMINA10</span>
+        </div>
+        
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-20 gap-4">
+                
+                <!-- Logo -->
+                <div class="flex-shrink-0 flex items-center">
+                    <a href="#" class="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 flex items-center gap-2">
+                        <span class="bg-gradient-to-r from-blue-600 to-indigo-600 text-transparent bg-clip-text">Lumina</span>
+                        <span class="w-2 h-2 rounded-full bg-indigo-600 inline-block"></span>
+                    </a>
+                </div>
+
+                <!-- 搜尋欄 (Desktop) -->
+                <div class="hidden md:flex flex-1 max-w-md mx-8">
+                    <div class="relative w-full">
+                        <input type="text" id="searchInput" placeholder="搜尋品質好物、設計家居..." 
+                            class="w-full pl-10 pr-4 py-2.5 rounded-full border border-slate-200 bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm transition-all shadow-inner">
+                        <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                            <i class="fa-solid fa-magnifying-glass text-sm"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 右側操作選單 (搜尋觸發, 購物車, 用戶) -->
+                <div class="flex items-center gap-3 sm:gap-5">
+                    <!-- 行動裝置搜尋按鈕 -->
+                    <button id="mobileSearchBtn" class="md:hidden p-2 text-slate-600 hover:text-slate-900 focus:outline-none" title="搜尋">
+                        <i class="fa-solid fa-magnifying-glass text-xl"></i>
+                    </button>
+
+                    <!-- 用戶帳號按鈕 -->
+                    <button class="flex items-center gap-2 p-2 rounded-full hover:bg-slate-100 text-slate-700 transition">
+                        <i class="fa-regular fa-user text-xl sm:text-lg"></i>
+                        <span class="hidden lg:inline text-sm font-medium">會員登入</span>
+                    </button>
+
+                    <!-- 購物車按鈕 -->
+                    <button id="openCartBtn" class="relative p-2.5 rounded-full bg-slate-900 text-white hover:bg-blue-600 transition-all duration-200 shadow-md hover:shadow-blue-200 flex items-center justify-center">
+                        <i class="fa-solid fa-bag-shopping text-lg"></i>
+                        <span id="cartBadge" class="absolute -top-1.5 -right-1.5 bg-rose-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center border-2 border-white scale-0 transition-transform duration-300">0</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- 行動裝置展開搜尋欄 -->
+            <div id="mobileSearchMenu" class="hidden md:hidden pb-4 pt-1 border-t border-slate-100">
+                <div class="relative w-full">
+                    <input type="text" id="mobileSearchInput" placeholder="搜尋商品..." 
+                        class="w-full pl-10 pr-4 py-2 rounded-lg border border-slate-200 bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                        <i class="fa-solid fa-magnifying-glass text-sm"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 分類導覽列 (Sub-navbar) -->
+            <nav class="hidden sm:flex items-center space-x-8 py-3 text-sm font-medium text-slate-600 border-t border-slate-100/80">
+                <button class="category-filter-btn active text-blue-600 font-semibold border-b-2 border-blue-600 pb-1" data-category="all">全部商品</button>
+                <button class="category-filter-btn hover:text-blue-600 pb-1 transition" data-category="3c">3C 數位科技</button>
+                <button class="category-filter-btn hover:text-blue-600 pb-1 transition" data-category="home">居家生活</button>
+                <button class="category-filter-btn hover:text-blue-600 pb-1 transition" data-category="apparel">個人穿搭</button>
+                <button class="category-filter-btn hover:text-blue-600 pb-1 transition" data-category="office">辦公文創</button>
+            </nav>
+        </div>
+    </header>
+
+    <!-- 主體內容 -->
+    <main class="flex-grow">
+        
+        <!-- 2. 焦點輪播 / Hero 區塊 -->
+        <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 pb-8">
+            <div class="relative rounded-3xl overflow-hidden shadow-2xl bg-slate-900 min-h-[380px] sm:min-h-[460px] flex items-center">
+                <!-- 背景幻燈片圖片 -->
+                <div id="heroBg" class="absolute inset-0 bg-cover bg-center transition-all duration-700 opacity-60" style="background-image: url('https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=1600&q=80')"></div>
+                <div class="absolute inset-0 bg-gradient-to-r from-slate-950/90 via-slate-950/50 to-transparent"></div>
+
+                <!-- 輪播內容文字 -->
+                <div class="relative z-10 max-w-xl px-8 sm:px-16 py-12 text-white">
+                    <span id="heroSubtitle" class="inline-block px-3 py-1 bg-blue-500/30 border border-blue-400/40 backdrop-blur-md rounded-full text-blue-300 text-xs font-semibold tracking-wider uppercase mb-4">
+                        2026 新品上市
+                    </span>
+                    <h1 id="heroTitle" class="text-3xl sm:text-5xl font-extrabold tracking-tight leading-tight mb-4">
+                        沉浸於極致極簡的音質體驗
+                    </h1>
+                    <p id="heroDesc" class="text-slate-300 text-sm sm:text-base mb-8 leading-relaxed">
+                        精選頂級無降噪藍牙耳機，為日常通勤與專注時刻帶來前所未有的純淨聆聽感受。
+                    </p>
+                    <a href="#product-section" class="inline-flex items-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-semibold px-7 py-3.5 rounded-full shadow-lg hover:shadow-blue-500/25 transition-all transform hover:-translate-y-0.5">
+                        <span>立即選購</span>
+                        <i class="fa-solid fa-arrow-right text-sm"></i>
+                    </a>
+                </div>
+
+                <!-- 輪播控制鍵 (指示燈) -->
+                <div class="absolute bottom-6 right-8 z-10 flex gap-2">
+                    <button class="hero-dot w-3 h-3 rounded-full bg-white transition-all opacity-100" onclick="setHeroSlide(0)"></button>
+                    <button class="hero-dot w-3 h-3 rounded-full bg-white/40 transition-all hover:bg-white" onclick="setHeroSlide(1)"></button>
+                    <button class="hero-dot w-3 h-3 rounded-full bg-white/40 transition-all hover:bg-white" onclick="setHeroSlide(2)"></button>
+                </div>
+            </div>
+        </section>
+
+        <!-- 行動裝置分類滾動選單 -->
+        <div class="sm:hidden px-4 mb-6">
+            <div class="flex overflow-x-auto gap-2 pb-2 scrollbar-none text-xs font-medium">
+                <button class="category-filter-btn active bg-blue-600 text-white px-4 py-2 rounded-full whitespace-nowrap shadow-sm" data-category="all">全部商品</button>
+                <button class="category-filter-btn bg-white text-slate-700 border border-slate-200 px-4 py-2 rounded-full whitespace-nowrap" data-category="3c">3C 數位</button>
+                <button class="category-filter-btn bg-white text-slate-700 border border-slate-200 px-4 py-2 rounded-full whitespace-nowrap" data-category="home">居家生活</button>
+                <button class="category-filter-btn bg-white text-slate-700 border border-slate-200 px-4 py-2 rounded-full whitespace-nowrap" data-category="apparel">個人穿搭</button>
+                <button class="category-filter-btn bg-white text-slate-700 border border-slate-200 px-4 py-2 rounded-full whitespace-nowrap" data-category="office">辦公文創</button>
+            </div>
+        </div>
+
+        <!-- 3. 商品列表區 (Product Grid) -->
+        <section id="product-section" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div class="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-4">
+                <div>
+                    <h2 class="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">嚴選好物產品推薦</h2>
+                    <p class="text-slate-500 text-sm mt-1">提升生活品質的質感設計設計款單品</p>
+                </div>
+                
+                <!-- 商品排序與顯示統計 -->
+                <div class="flex items-center justify-between md:justify-end gap-4 text-sm">
+                    <span id="productCount" class="text-slate-500">顯示 8 項商品</span>
+                    <select id="sortSelect" class="bg-white border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-700 cursor-pointer shadow-sm">
+                        <option value="featured">推薦排序</option>
+                        <option value="price-low">價格：低至高</option>
+                        <option value="price-high">價格：高至低</option>
+                        <option value="rating">顧客評價最高</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- 商品網格 -->
+            <div id="productGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8">
+                <!-- 商品卡片由 JavaScript 動態渲染 -->
+            </div>
+
+            <!-- 無搜尋結果提示 -->
+            <div id="noResults" class="hidden text-center py-16 bg-white rounded-2xl border border-dashed border-slate-200 my-6">
+                <i class="fa-regular fa-face-frown text-4xl text-slate-300 mb-3"></i>
+                <h3 class="text-lg font-semibold text-slate-700">找不到符合條件的商品</h3>
+                <p class="text-slate-500 text-sm mt-1">請嘗試修改搜尋關鍵字或選擇其他分類。</p>
+                <button onclick="resetFilters()" class="mt-4 px-4 py-2 bg-slate-900 text-white rounded-lg text-sm hover:bg-slate-800 transition">重設搜尋條件</button>
+            </div>
+        </section>
+
+        <!-- 服務特色標籤區塊 -->
+        <section class="border-t border-slate-200/60 bg-white py-12 mt-12">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-8">
+                    <div class="flex items-center gap-4">
+                        <div class="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center text-xl shrink-0">
+                            <i class="fa-solid fa-truck-fast"></i>
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-slate-900 text-sm">快速出貨</h4>
+                            <p class="text-slate-500 text-xs mt-0.5">全館 24hr 內火速出貨</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-4">
+                        <div class="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-xl shrink-0">
+                            <i class="fa-solid fa-shield-halved"></i>
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-slate-900 text-sm">安心保固</h4>
+                            <p class="text-slate-500 text-xs mt-0.5">提供 7 天鑑賞與原廠保固</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-4">
+                        <div class="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-xl shrink-0">
+                            <i class="fa-solid fa-credit-card"></i>
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-slate-900 text-sm">多元支付</h4>
+                            <p class="text-slate-500 text-xs mt-0.5">信用卡、Line Pay 與超取</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-4">
+                        <div class="w-12 h-12 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center text-xl shrink-0">
+                            <i class="fa-solid fa-headset"></i>
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-slate-900 text-sm">專人客服</h4>
+                            <p class="text-slate-500 text-xs mt-0.5">週一至週五 線上即時回覆</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- 4. 購物車側滑欄 (Cart Drawer) -->
+    <!-- 遮罩背景 -->
+    <div id="cartOverlay" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 opacity-0 pointer-events-none transition-opacity duration-300"></div>
+    
+    <!-- 側滑面板 -->
+    <aside id="cartDrawer" class="fixed top-0 right-0 h-full w-full sm:w-[420px] bg-white z-50 shadow-2xl transform translate-x-full transition-transform duration-300 ease-in-out flex flex-col">
+        <!-- 購物車標題 -->
+        <div class="p-6 border-b border-slate-100 flex items-center justify-between">
+            <div class="flex items-center gap-2">
+                <i class="fa-solid fa-bag-shopping text-blue-600 text-xl"></i>
+                <h3 class="text-lg font-bold text-slate-900">購物清單</h3>
+                <span id="drawerCartCount" class="bg-slate-100 text-slate-600 text-xs px-2.5 py-0.5 rounded-full font-semibold">0 件商品</span>
+            </div>
+            <button id="closeCartBtn" class="p-2 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-full transition">
+                <i class="fa-solid fa-xmark text-xl"></i>
+            </button>
+        </div>
+
+        <!-- 購物車商品列表 (可滾動) -->
+        <div id="cartItemsContainer" class="flex-1 overflow-y-auto p-6 space-y-4 divide-y divide-slate-100">
+            <!-- 動態加入購物車項目 -->
+        </div>
+
+        <!-- 購物車空白狀態 -->
+        <div id="emptyCartState" class="flex-1 flex flex-col items-center justify-center p-6 text-center">
+            <div class="w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center text-slate-300 text-3xl mb-4">
+                <i class="fa-solid fa-cart-flatbed"></i>
+            </div>
+            <p class="text-slate-600 font-medium">購物車目前是空的</p>
+            <p class="text-slate-400 text-sm mt-1 mb-6">快去選購心儀的商品吧！</p>
+            <button onclick="closeCart()" class="px-6 py-2.5 bg-slate-900 text-white rounded-full text-sm font-medium hover:bg-slate-800 transition">探索商品</button>
+        </div>
+
+        <!-- 購物車底部結帳區 -->
+        <div id="cartFooter" class="p-6 border-t border-slate-100 bg-slate-50 space-y-4 hidden">
+            <!-- 優惠碼輸入 -->
+            <div class="flex gap-2">
+                <input type="text" placeholder="輸入優惠碼 (如: LUMINA10)" class="flex-1 px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs uppercase focus:outline-none focus:ring-1 focus:ring-blue-500">
+                <button class="px-3 py-2 bg-slate-200 text-slate-700 text-xs font-semibold rounded-lg hover:bg-slate-300 transition">套用</button>
+            </div>
+
+            <!-- 金額小計 -->
+            <div class="space-y-1.5 text-sm">
+                <div class="flex justify-between text-slate-500">
+                    <span>商品小計</span>
+                    <span id="subtotalAmount">NT$ 0</span>
+                </div>
+                <div class="flex justify-between text-slate-500">
+                    <span>預估運費</span>
+                    <span id="shippingAmount" class="text-emerald-600 font-medium">免運費</span>
+                </div>
+                <div class="border-t border-slate-200 pt-2 flex justify-between font-bold text-slate-900 text-base">
+                    <span>總計金額</span>
+                    <span id="totalAmount" class="text-blue-600">NT$ 0</span>
+                </div>
+            </div>
+
+            <!-- 結帳按鈕 -->
+            <button class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold py-3.5 rounded-xl shadow-lg hover:shadow-blue-500/25 hover:from-blue-500 hover:to-indigo-500 transition-all flex items-center justify-center gap-2">
+                <span>前往安全結帳</span>
+                <i class="fa-solid fa-lock text-xs opacity-80"></i>
+            </button>
+        </div>
+    </aside>
+
+    <!-- 通知 Toast 提示 -->
+    <div id="toast" class="fixed bottom-6 right-6 z-50 bg-slate-900 text-white px-5 py-3 rounded-2xl shadow-xl flex items-center gap-3 transform translate-y-20 opacity-0 transition-all duration-300 pointer-events-none">
+        <i class="fa-solid fa-circle-check text-emerald-400 text-lg"></i>
+        <span id="toastMessage" class="text-sm font-medium">已新增至購物車</span>
+    </div>
+
+    <!-- 5. 簡潔現代 Footer 頁尾資訊區 -->
+    <footer class="bg-slate-900 text-slate-400 border-t border-slate-800">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+            <div class="grid grid-cols-1 md:grid-cols-5 gap-8 mb-12">
+                
+                <!-- 品牌簡介 -->
+                <div class="md:col-span-2 space-y-4">
+                    <a href="#" class="text-2xl font-extrabold text-white tracking-tight flex items-center gap-2">
+                        <span>Lumina</span>
+                        <span class="w-2 h-2 rounded-full bg-blue-500"></span>
+                    </a>
+                    <p class="text-sm text-slate-400 leading-relaxed max-w-sm">
+                        Lumina 致力於為您嚴選高品質的現代生活好物。從極簡設計到極致實用，陪您打造最具風格的生活空間。
+                    </p>
+                    <div class="flex space-x-4 pt-2">
+                        <a href="#" class="w-9 h-9 rounded-full bg-slate-800 flex items-center justify-center text-slate-300 hover:bg-blue-600 hover:text-white transition"><i class="fa-brands fa-facebook-f text-sm"></i></a>
+                        <a href="#" class="w-9 h-9 rounded-full bg-slate-800 flex items-center justify-center text-slate-300 hover:bg-rose-600 hover:text-white transition"><i class="fa-brands fa-instagram text-sm"></i></a>
+                        <a href="#" class="w-9 h-9 rounded-full bg-slate-800 flex items-center justify-center text-slate-300 hover:bg-slate-700 hover:text-white transition"><i class="fa-brands fa-line text-sm"></i></a>
+                    </div>
+                </div>
+
+                <!-- 連結選單 1 -->
+                <div>
+                    <h5 class="text-white font-semibold text-sm mb-4">選購指南</h5>
+                    <ul class="space-y-2.5 text-sm">
+                        <li><a href="#" class="hover:text-white transition">熱銷新品</a></li>
+                        <li><a href="#" class="hover:text-white transition">本月特惠商品</a></li>
+                        <li><a href="#" class="hover:text-white transition">風格誌專欄</a></li>
+                        <li><a href="#" class="hover:text-white transition">品牌專屬禮盒</a></li>
+                    </ul>
+                </div>
+
+                <!-- 連結選單 2 -->
+                <div>
+                    <h5 class="text-white font-semibold text-sm mb-4">顧客服務</h5>
+                    <ul class="space-y-2.5 text-sm">
+                        <li><a href="#" class="hover:text-white transition">常見問題 FAQ</a></li>
+                        <li><a href="#" class="hover:text-white transition">運送與付款方式</a></li>
+                        <li><a href="#" class="hover:text-white transition">退換貨政策</a></li>
+                        <li><a href="#" class="hover:text-white transition">會員權益說明</a></li>
+                    </ul>
+                </div>
+
+                <!-- 訂閱電子報 -->
+                <div>
+                    <h5 class="text-white font-semibold text-sm mb-4">獲得專屬優惠</h5>
+                    <p class="text-xs text-slate-400 mb-3">訂閱電子報，即時掌握新品上市與限量折扣。</p>
+                    <div class="space-y-2">
+                        <input type="email" placeholder="您的 Email 地址" class="w-full px-3.5 py-2.5 bg-slate-800 border border-slate-700 rounded-lg text-xs text-white placeholder-slate-500 focus:outline-none focus:border-blue-500">
+                        <button class="w-full bg-blue-600 hover:bg-blue-500 text-white font-medium text-xs py-2.5 rounded-lg transition">立即訂閱</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="border-t border-slate-800 pt-8 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-500 gap-4">
+                <p>&copy; 2026 Lumina Design Co., Ltd. All rights reserved.</p>
+                <div class="flex gap-6">
+                    <a href="#" class="hover:underline">隱私權政策</a>
+                    <a href="#" class="hover:underline">服務條款</a>
+                    <a href="#" class="hover:underline">Cookie 設定</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- 6. JavaScript 應用邏輯與互動機制 -->
+    <script>
+        // 商品資料數據庫 (Mock Data)
+        const products = [
+            {
+                id: 1,
+                name: "Studio Pro 主動降噪無線耳罩式耳機",
+                category: "3c",
+                price: 4980,
+                originalPrice: 6200,
+                rating: 4.9,
+                reviews: 128,
+                image: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=600&q=80",
+                badge: "熱銷一號"
+            },
+            {
+                id: 2,
+                name: "Nordic Minimalist 鋁合金LED極簡桌燈",
+                category: "home",
+                price: 1850,
+                originalPrice: 2200,
+                rating: 4.7,
+                reviews: 85,
+                image: "https://images.unsplash.com/photo-1507473885765-e6ed057f782c?auto=format&fit=crop&w=600&q=80",
+                badge: "品味推薦"
+            },
+            {
+                id: 3,
+                name: "ErgoFlow 人體工學高透氣辦公椅",
+                category: "office",
+                price: 6800,
+                originalPrice: 8500,
+                rating: 4.8,
+                reviews: 210,
+                image: "https://images.unsplash.com/photo-1580481072645-022f9a6d1270?auto=format&fit=crop&w=600&q=80",
+                badge: null
+            },
+            {
+                id: 4,
+                name: "Crafted Ceramic 日式手工質感陶瓷馬克杯",
+                category: "home",
+                price: 450,
+                originalPrice: 600,
+                rating: 4.6,
+                reviews: 64,
+                image: "https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?auto=format&fit=crop&w=600&q=80",
+                badge: "超值小禮"
+            },
+            {
+                id: 5,
+                name: "Classic Chrono 極簡手作真皮腕錶",
+                category: "apparel",
+                price: 3280,
+                originalPrice: 4100,
+                rating: 4.9,
+                reviews: 95,
+                image: "https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=600&q=80",
+                badge: "新品"
+            },
+            {
+                id: 6,
+                name: "Aroma Diffuser 靜音香氛超音波加濕器",
+                category: "home",
+                price: 1280,
+                originalPrice: 1600,
+                rating: 4.5,
+                reviews: 42,
+                image: "https://images.unsplash.com/photo-1602928321679-560bb453f190?auto=format&fit=crop&w=600&q=80",
+                badge: null
+            },
+            {
+                id: 7,
+                name: "Urban Explorer 防水多功能後背包",
+                category: "apparel",
+                price: 2450,
+                originalPrice: 2980,
+                rating: 4.8,
+                reviews: 156,
+                image: "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?auto=format&fit=crop&w=600&q=80",
+                badge: "熱銷"
+            },
+            {
+                id: 8,
+                name: "MechType 65% 無線雙模機械鍵盤",
+                category: "3c",
+                price: 2980,
+                originalPrice: 3500,
+                rating: 4.9,
+                reviews: 178,
+                image: "https://images.unsplash.com/photo-1587829741301-dc798b83add3?auto=format&fit=crop&w=600&q=80",
+                badge: "極客首選"
+            }
+        ];
+
+        // Hero 輪播圖數據
+        const heroSlides = [
+            {
+                subtitle: "2026 新品上市",
+                title: "沉浸於極致極簡的音質體驗",
+                desc: "精選頂級無降噪藍牙耳機，為日常通勤與專注時刻帶來前所未有的純淨聆聽感受。",
+                image: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=1600&q=80"
+            },
+            {
+                subtitle: "居家美學系列",
+                title: "用光影點亮生活的靈魂細節",
+                desc: "引領北歐極簡工藝，打造兼具設計感與溫馨氛圍的燈飾與家居風格品",
+                image: "https://images.unsplash.com/photo-1507473885765-e6ed057f782c?auto=format&fit=crop&w=1600&q=80"
+            },
+            {
+                subtitle: "限時特惠 85 折",
+                title: "升級你的高效辦公桌面生態",
+                desc: "人體工學椅與質感周邊，為長時工作提供最舒適的支持與靈感陪伴。",
+                image: "https://images.unsplash.com/photo-1580481072645-022f9a6d1270?auto=format&fit=crop&w=1600&q=80"
+            }
+        ];
+
+        // 狀態管理 (State Management)
+        let cart = [];
+        let currentCategory = 'all';
+        let searchQuery = '';
+        let currentSort = 'featured';
+        let heroIndex = 0;
+        let heroInterval;
+
+        // DOM 載入後初始化
+        document.addEventListener('DOMContentLoaded', () => {
+            renderProducts();
+            setupEventListeners();
+            startHeroTimer();
+            updateCartUI();
+        });
+
+        // 1. 渲染商品網格 (Render Products)
+        function renderProducts() {
+            const grid = document.getElementById('productGrid');
+            const noResults = document.getElementById('noResults');
+            
+            // 過濾與搜尋
+            let filtered = products.filter(p => {
+                const matchesCategory = currentCategory === 'all' || p.category === currentCategory;
+                const matchesSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase());
+                return matchesCategory && matchesSearch;
+            });
+
+            // 排序邏輯
+            if (currentSort === 'price-low') {
+                filtered.sort((a, b) => a.price - b.price);
+            } else if (currentSort === 'price-high') {
+                filtered.sort((a, b) => b.price - a.price);
+            } else if (currentSort === 'rating') {
+                filtered.sort((a, b) => b.rating - a.rating);
+            }
+
+            // 更新商品數量統計
+            document.getElementById('productCount').textContent = `顯示 ${filtered.length} 項商品`;
+
+            if (filtered.length === 0) {
+                grid.innerHTML = '';
+                noResults.classList.remove('hidden');
+                return;
+            } else {
+                noResults.classList.add('hidden');
+            }
+
+            // 構建商品卡片 HTML
+            grid.innerHTML = filtered.map(p => `
+                <div class="group bg-white rounded-2xl border border-slate-100 overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between">
+                    <div class="relative overflow-hidden aspect-square bg-slate-100">
+                        <!-- 商品圖片 -->
+                        <img src="${p.image}" alt="${p.name}" class="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500">
+                        
+                        <!-- 標籤 Badge -->
+                        ${p.badge ? `<span class="absolute top-3 left-3 bg-slate-900/80 backdrop-blur-md text-white text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider">${p.badge}</span>` : ''}
+                        
+                        <!-- 快速收藏按鈕 -->
+                        <button class="absolute top-3 right-3 w-8 h-8 rounded-full bg-white/80 backdrop-blur-md text-slate-600 hover:text-rose-500 hover:bg-white flex items-center justify-center transition shadow-sm opacity-0 group-hover:opacity-100 transform translate-y-2 group-hover:translate-y-0 duration-200">
+                            <i class="fa-regular fa-heart text-sm"></i>
+                        </button>
+                    </div>
+
+                    <div class="p-5 flex-1 flex flex-col justify-between">
+                        <div>
+                            <!-- 評分 -->
+                            <div class="flex items-center gap-1.5 mb-2">
+                                <div class="flex text-amber-400 text-xs">
+                                    <i class="fa-solid fa-star"></i>
+                                </div>
+                                <span class="text-xs font-bold text-slate-700">${p.rating}</span>
+                                <span class="text-xs text-slate-400">(${p.reviews})</span>
+                            </div>
+
+                            <!-- 品名 -->
+                            <h3 class="font-semibold text-slate-800 text-sm line-clamp-2 hover:text-blue-600 transition cursor-pointer mb-2">
+                                ${p.name}
+                            </h3>
+                        </div>
+
+                        <div class="pt-3 border-t border-slate-50 flex items-center justify-between mt-2">
+                            <!-- 價格區 -->
+                            <div>
+                                <span class="text-lg font-bold text-slate-900">NT$ ${p.price.toLocaleString()}</span>
+                                ${p.originalPrice ? `<span class="text-xs text-slate-400 line-through block">NT$ ${p.originalPrice.toLocaleString()}</span>` : ''}
+                            </div>
+
+                            <!-- 加入購物車按鈕 -->
+                            <button onclick="addToCart(${p.id})" class="p-2.5 rounded-xl bg-slate-100 text-slate-800 hover:bg-blue-600 hover:text-white transition-all duration-200 active:scale-95 flex items-center justify-center" title="加入購物車">
+                                <i class="fa-solid fa-plus text-sm"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // 2. 購物車邏輯 (Cart Functionality)
+        function addToCart(productId) {
+            const product = products.find(p => p.id === productId);
+            const existingItem = cart.find(item => item.id === productId);
+
+            if (existingItem) {
+                existingItem.quantity += 1;
+            } else {
+                cart.push({ ...product, quantity: 1 });
+            }
+
+            updateCartUI();
+            showToast(`已成功將「${product.name.substring(0, 10)}...」加入購物車`);
+        }
+
+        function updateQuantity(productId, delta) {
+            const item = cart.find(i => i.id === productId);
+            if (!item) return;
+
+            item.quantity += delta;
+            if (item.quantity <= 0) {
+                cart = cart.filter(i => i.id !== productId);
+            }
+            updateCartUI();
+        }
+
+        function removeFromCart(productId) {
+            cart = cart.filter(i => i.id !== productId);
+            updateCartUI();
+        }
+
+        function updateCartUI() {
+            const totalCount = cart.reduce((sum, item) => sum + item.quantity, 0);
+            const totalPrice = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+
+            // 更新 Badge 數量
+            const badge = document.getElementById('cartBadge');
+            badge.textContent = totalCount;
+            if (totalCount > 0) {
+                badge.classList.remove('scale-0');
+                badge.classList.add('scale-100');
+            } else {
+                badge.classList.remove('scale-100');
+                badge.classList.add('scale-0');
+            }
+
+            document.getElementById('drawerCartCount').textContent = `${totalCount} 件商品`;
+
+            // 渲染購物車內列表
+            const container = document.getElementById('cartItemsContainer');
+            const emptyState = document.getElementById('emptyCartState');
+            const cartFooter = document.getElementById('cartFooter');
+
+            if (cart.length === 0) {
+                container.innerHTML = '';
+                emptyState.classList.remove('hidden');
+                cartFooter.classList.add('hidden');
+            } else {
+                emptyState.classList.add('hidden');
+                cartFooter.classList.remove('hidden');
+
+                container.innerHTML = cart.map(item => `
+                    <div class="flex gap-4 pt-4 first:pt-0">
+                        <img src="${item.image}" alt="${item.name}" class="w-16 h-16 rounded-xl object-cover bg-slate-100 shrink-0">
+                        <div class="flex-1 min-w-0">
+                            <h4 class="text-xs font-semibold text-slate-800 line-clamp-1">${item.name}</h4>
+                            <p class="text-xs font-bold text-slate-900 mt-1">NT$ ${item.price.toLocaleString()}</p>
+                            
+                            <div class="flex items-center justify-between mt-2">
+                                <!-- 數量增減組件 -->
+                                <div class="flex items-center border border-slate-200 rounded-lg overflow-hidden bg-slate-50">
+                                    <button onclick="updateQuantity(${item.id}, -1)" class="px-2 py-0.5 text-xs text-slate-600 hover:bg-slate-200 transition">-</button>
+                                    <span class="px-2.5 py-0.5 text-xs font-medium text-slate-800">${item.quantity}</span>
+                                    <button onclick="updateQuantity(${item.id}, 1)" class="px-2 py-0.5 text-xs text-slate-600 hover:bg-slate-200 transition">+</button>
+                                </div>
+                                
+                                <button onclick="removeFromCart(${item.id})" class="text-xs text-slate-400 hover:text-rose-500 transition">
+                                    <i class="fa-regular fa-trash-can"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+            }
+
+            // 更新金額計算
+            document.getElementById('subtotalAmount').textContent = `NT$ ${totalPrice.toLocaleString()}`;
+            document.getElementById('totalAmount').textContent = `NT$ ${totalPrice.toLocaleString()}`;
+        }
+
+        // 側滑購物車控制
+        function openCart() {
+            document.getElementById('cartOverlay').classList.remove('opacity-0', 'pointer-events-none');
+            document.getElementById('cartDrawer').classList.remove('translate-x-full');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeCart() {
+            document.getElementById('cartOverlay').classList.add('opacity-0', 'pointer-events-none');
+            document.getElementById('cartDrawer').classList.add('translate-x-full');
+            document.body.style.overflow = '';
+        }
+
+        // 3. Hero 焦點輪播邏輯
+        function setHeroSlide(index) {
+            heroIndex = index;
+            const slide = heroSlides[heroIndex];
+            
+            const heroBg = document.getElementById('heroBg');
+            heroBg.style.backgroundImage = `url('${slide.image}')`;
+            
+            document.getElementById('heroSubtitle').textContent = slide.subtitle;
+            document.getElementById('heroTitle').textContent = slide.title;
+            document.getElementById('heroDesc').textContent = slide.desc;
+
+            // 更新指示圓點狀態
+            const dots = document.querySelectorAll('.hero-dot');
+            dots.forEach((dot, idx) => {
+                if (idx === heroIndex) {
+                    dot.classList.remove('bg-white/40');
+                    dot.classList.add('bg-white');
+                } else {
+                    dot.classList.remove('bg-white');
+                    dot.classList.add('bg-white/40');
+                }
+            });
+        }
+
+        function startHeroTimer() {
+            heroInterval = setInterval(() => {
+                heroIndex = (heroIndex + 1) % heroSlides.length;
+                setHeroSlide(heroIndex);
+            }, 5000);
+        }
+
+        // 4. 事件監聽設定 (Event Listeners)
+        function setupEventListeners() {
+            // 購物車開啟/關閉
+            document.getElementById('openCartBtn').addEventListener('click', openCart);
+            document.getElementById('closeCartBtn').addEventListener('click', closeCart);
+            document.getElementById('cartOverlay').addEventListener('click', closeCart);
+
+            // 桌面端與行動端搜尋框監聽
+            const handleSearch = (e) => {
+                searchQuery = e.target.value.trim();
+                renderProducts();
+            };
+            document.getElementById('searchInput').addEventListener('input', handleSearch);
+            document.getElementById('mobileSearchInput').addEventListener('input', handleSearch);
+
+            // 行動端搜尋按鈕切換
+            document.getElementById('mobileSearchBtn').addEventListener('click', () => {
+                const menu = document.getElementById('mobileSearchMenu');
+                menu.classList.toggle('hidden');
+            });
+
+            // 商品排序切換
+            document.getElementById('sortSelect').addEventListener('change', (e) => {
+                currentSort = e.value || e.target.value;
+                renderProducts();
+            });
+
+            // 分類按鈕切換事件
+            const categoryBtns = document.querySelectorAll('.category-filter-btn');
+            categoryBtns.forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    categoryBtns.forEach(b => {
+                        b.classList.remove('active', 'text-blue-600', 'font-semibold', 'border-b-2', 'border-blue-600', 'bg-blue-600', 'text-white');
+                        b.classList.add('text-slate-600');
+                    });
+
+                    const category = e.target.getAttribute('data-category');
+                    currentCategory = category;
+
+                    // 同步套用 active 狀態
+                    document.querySelectorAll(`[data-category="${category}"]`).forEach(b => {
+                        b.classList.add('active');
+                        if (b.classList.contains('bg-white') || b.parentElement.classList.contains('scrollbar-none')) {
+                            b.classList.add('bg-blue-600', 'text-white');
+                        } else {
+                            b.classList.add('text-blue-600', 'font-semibold', 'border-b-2', 'border-blue-600');
+                        }
+                    });
+
+                    renderProducts();
+                });
+            });
+        }
+
+        // 重設篩選器
+        function resetFilters() {
+            searchQuery = '';
+            currentCategory = 'all';
+            currentSort = 'featured';
+            document.getElementById('searchInput').value = '';
+            document.getElementById('mobileSearchInput').value = '';
+            document.getElementById('sortSelect').value = 'featured';
+            
+            // 觸發分類按鈕重置
+            document.querySelector('.category-filter-btn[data-category="all"]').click();
+        }
+
+        // Toast 訊息跳出提示
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            const toastMsg = document.getElementById('toastMessage');
+            
+            toastMsg.textContent = message;
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            toast.classList.add('translate-y-0', 'opacity-100');
+
+            setTimeout(() => {
+                toast.classList.remove('translate-y-0', 'opacity-100');
+                toast.classList.add('translate-y-20', 'opacity-0');
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
